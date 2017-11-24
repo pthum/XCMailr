@@ -21,6 +21,7 @@ import controllers.Application;
 import controllers.BoxHandler;
 import controllers.SwaggerHandler;
 import controllers.UserHandler;
+import controllers.api.UserController;
 import ninja.AssetsController;
 import ninja.Router;
 import ninja.application.ApplicationRoutes;
@@ -127,6 +128,13 @@ public class Routes implements ApplicationRoutes
         /* apispec */
         router.GET().route("/apispec/swagger.json").with(SwaggerHandler.class, "getSwaggerJson");
         router.GET().route("/apispec").with(SwaggerHandler.class, "getSwaggerHtml");
+
+        /* REST API */
+        router.POST().route("/api/user").with(UserController.class, "createUser");
+        router.GET().route("/api/user").with(UserController.class, "getUsers");
+        router.GET().route("/api/user/{id}").with(UserController.class, "getUser");
+        router.PUT().route("/api/user/{id}").with(UserController.class, "editUser");
+        router.DELETE().route("/api/user/{id}").with(UserController.class, "deleteUser");
         /*
          * Assets-Handling (Ninja's AssetsController)
          */

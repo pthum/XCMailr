@@ -30,7 +30,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.avaje.ebean.Ebean;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * User Object
@@ -219,6 +221,7 @@ public class User extends AbstractEntity implements Serializable
     /**
      * @return the hashed Value of the BCrypted Password
      */
+    @JsonIgnore
     public String getPasswd()
     {
 
@@ -253,6 +256,7 @@ public class User extends AbstractEntity implements Serializable
      * @param passwd
      *            the Password to set (after hashing with BCrypt)
      */
+    @JsonIgnore
     public void setPasswd(String passwd)
     {
         this.passwd = passwd;
@@ -261,6 +265,7 @@ public class User extends AbstractEntity implements Serializable
     /**
      * @return true, if a User is Admin
      */
+    @JsonProperty
     public boolean isAdmin()
     {
         return admin;
@@ -269,6 +274,7 @@ public class User extends AbstractEntity implements Serializable
     /**
      * @return true, if the Account is active
      */
+    @JsonProperty
     public boolean isActive()
     {
         return active;
@@ -280,6 +286,7 @@ public class User extends AbstractEntity implements Serializable
      * @param active
      *            boolean which indicates the new state of the User-account
      */
+    @JsonIgnore
     public void setActive(boolean active)
     {
         this.active = active;
@@ -291,6 +298,7 @@ public class User extends AbstractEntity implements Serializable
      * @param admin
      *            the Boolean if the User should be Admin or not
      */
+    @JsonIgnore
     public void setAdmin(boolean admin)
     {
         this.admin = admin;
@@ -302,6 +310,7 @@ public class User extends AbstractEntity implements Serializable
      * 
      * @return the randomly-generated confirm-token
      */
+    @JsonIgnore
     public String getConfirmation()
     {
         return confirmation;
@@ -312,6 +321,7 @@ public class User extends AbstractEntity implements Serializable
      * 
      * @param confirmation
      */
+    @JsonIgnore
     public void setConfirmation(String confirmation)
     {
         this.confirmation = confirmation;
@@ -337,6 +347,7 @@ public class User extends AbstractEntity implements Serializable
     /**
      * @return the Number of wrong entered Passwords
      */
+    @JsonProperty
     public int getBadPwCount()
     {
         return badPwCount;
@@ -346,6 +357,7 @@ public class User extends AbstractEntity implements Serializable
      * @param badPwCount
      *            the Number of wrong entered Passwords
      */
+    @JsonIgnore
     public void setBadPwCount(int badPwCount)
     {
         this.badPwCount = badPwCount;
@@ -419,7 +431,7 @@ public class User extends AbstractEntity implements Serializable
     {
         // get the user by the mailadress
         User usr = Ebean.find(User.class).where().eq("mail", mail.toLowerCase()).findUnique();
-        return (usr != null && BCrypt.checkpw(pw, usr.getPasswd())) ? usr : null; 
+        return (usr != null && BCrypt.checkpw(pw, usr.getPasswd())) ? usr : null;
     }
 
     /**
@@ -436,7 +448,7 @@ public class User extends AbstractEntity implements Serializable
     public static User authById(Long id, String pw)
     {
         User usr = Ebean.find(User.class, id);
-        return (usr != null && BCrypt.checkpw(pw, usr.getPasswd())) ? usr :null;
+        return (usr != null && BCrypt.checkpw(pw, usr.getPasswd())) ? usr : null;
     }
 
     /**

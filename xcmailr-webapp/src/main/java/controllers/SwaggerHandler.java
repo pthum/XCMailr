@@ -40,7 +40,7 @@ import ninja.params.PathParam;
 /**
  * Handles swagger generation
  * 
- * @author Patrick Thum, Apinauten GmbH, Germany
+ * @author Patrick Thum
  */
 @Singleton
 public class SwaggerHandler

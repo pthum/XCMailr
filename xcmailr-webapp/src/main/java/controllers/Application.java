@@ -19,6 +19,16 @@ package controllers;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+
+import com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import conf.XCMailrConf;
+import etc.HelperUtils;
+import filters.NoLoginFilter;
 import models.Domain;
 import models.LoginFormData;
 import models.PasswordFormData;
@@ -34,17 +44,6 @@ import ninja.params.Param;
 import ninja.params.PathParam;
 import ninja.validation.JSR303Validation;
 import ninja.validation.Validation;
-
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
-
-import com.google.common.base.Optional;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import conf.XCMailrConf;
-import etc.HelperUtils;
-import filters.NoLoginFilter;
 
 /**
  * Handles all general application actions like login, logout, forgot password or index page
@@ -87,7 +86,8 @@ public class Application
         }
 
         // show the index-page
-        List<String[]> languageList = HelperUtils.getLanguageList(xcmConfiguration.APP_LANGS, context, result, messages);
+        List<String[]> languageList = HelperUtils.getLanguageList(xcmConfiguration.APP_LANGS, context, result,
+                                                                  messages);
         return result.render("available_langs", languageList);
     }
 
@@ -105,7 +105,8 @@ public class Application
     {
         Result result = Results.html();
         // render the available languages
-        List<String[]> languageList = HelperUtils.getLanguageList(xcmConfiguration.APP_LANGS, context, result, messages);
+        List<String[]> languageList = HelperUtils.getLanguageList(xcmConfiguration.APP_LANGS, context, result,
+                                                                  messages);
         return result.render("available_langs", languageList).render("registerUserData", new UserFormData());
     }
 
@@ -189,7 +190,7 @@ public class Application
         if (!Arrays.asList(xcmConfiguration.APP_LANGS).contains(user.getLanguage()))
         { // the language stored in the user-object does not exist in the app
             registerFormData.clearPasswordFields();
-            context.getFlashScope().error("flash_PasswordsUnequal");
+            context.getFlashScope().error("flash_LangNotExist");
             return result.render("registerUserData", registerFormData);
         }
 

@@ -16,9 +16,23 @@
  */
 package models;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotEmpty;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Optional;
+
+import conf.XCMailrConf;
+import ninja.Context;
+import ninja.Result;
+import ninja.i18n.Messages;
+import ninja.validation.Validation;
 
 /**
  * Holds all Data for the Edit Form (and is also used in the Registration-Process)
@@ -26,8 +40,11 @@ import org.hibernate.validator.constraints.NotEmpty;
  * @author Patrick Thum, Xceptance Software Technologies GmbH, Germany
  */
 
-public class UserFormData
+public class UserFormData implements Serializable
 {
+    /** SVUID */
+    private static final long serialVersionUID = -5584946661822321734L;
+
     @NotEmpty
     @Length(min = 1, max = 255)
     public String firstName;
@@ -180,6 +197,7 @@ public class UserFormData
      * @return a {@link User}-Object instantiated with the given Data
      * @see User
      */
+    @JsonIgnore
     public User getAsUser()
     {
         return new User(firstName, surName, mail, passwordNew1, language);
@@ -207,6 +225,79 @@ public class UserFormData
         this.setPassword("");
         this.setPasswordNew1("");
         this.setPasswordNew2("");
+    }
+
+    /**
+     * Validates:
+     * <ul>
+     * <li>result of validation object</li>
+     * <li>submission of Existing mail address</li>
+     * <li>mail-domain is not a configured temporary-domain</li>
+     * <li>domain is whitelisted (if whitelist exists)</li>
+     * <li>password equality</li>
+     * <li>password is long enough</li>
+     * <li>submitted language is acceptable</li>
+     * </ul>
+     * 
+     * @param xcmConfiguration
+     * @param validation
+     * @param msg
+     * @param ctx
+     * @param optRes
+     * @return a string list of errors
+     */
+    public List<String> validateCreation(XCMailrConf xcmConfiguration, Validation validation, Messages msg, Context ctx,
+                                         Optional<Result> optRes)
+    {
+        List<String> errors = new ArrayList<>();
+        if (validation.hasViolations())
+        { // the form contains errors
+            errors.add(msg.get("flash_FormError", ctx, optRes).get());
+        }
+        // form was filled correctly, go on!
+        if (User.mailExists(getMail()))
+        { // mailadress already exists
+            errors.add(msg.get("flash_MailExists", ctx, optRes).get());
+        }
+
+        String mail = getMail();
+        String domainPart = mail.split("@")[1];
+        // don't let the user register with one of our domains
+        // (prevent mail-loops)
+        if (Arrays.asList(xcmConfiguration.DOMAIN_LIST).contains(domainPart))
+        {
+            errors.add(msg.get("flash_NoLoop", ctx, optRes).get());
+            setMail("");
+        }
+        // block the registration, if the domain is not on the whitelist (and the whitelisting is active)
+        if (xcmConfiguration.APP_WHITELIST)
+        { // whitelisting is active
+            if (Domain.getAll().isEmpty() && Domain.exists(domainPart) == false)
+            { // the domain is not in the whitelist and the whitelist is not empty
+                errors.add(msg.get("registerUser_Flash_NotWhitelisted", ctx, optRes).get());
+            }
+        }
+
+        // a new user, check whether the passwords are matching
+        if (getPassword().equals(getPasswordNew1()) == false)
+        { // password mismatch
+            errors.add(msg.get("flash_PasswordsUnequal", ctx, optRes).get());
+        }
+
+        if (getPasswordNew1().length() < xcmConfiguration.PW_LENGTH)
+        { // password is too short
+            errors.add(msg.get("flash_PasswordTooShort", ctx, optRes, xcmConfiguration.PW_LENGTH).get());
+        }
+        // handle the language
+        if (Arrays.asList(xcmConfiguration.APP_LANGS).contains(getLanguage()) == false)
+        { // the language stored in the user-object does not exist in the app
+            errors.add(msg.get("flash_LangNotExist", ctx, optRes).get());
+        }
+        if (errors.size() > 0)
+        {
+            clearPasswordFields();
+        }
+        return errors;
     }
 
 }
